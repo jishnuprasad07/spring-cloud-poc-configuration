@@ -1,0 +1,89 @@
+server:
+  port: 8082
+  
+spring:
+  cloud:
+   gateway:
+      routes:
+        - id: USER-SERVICE
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/keycloak/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: USER-SERVICE
+                fallbackuri: forward:/userServiceFallback
+                
+        - id: HEALTH-RECORDS-SERVICE
+          uri: lb://HEALTH-RECORDS-SERVICE
+          predicates:
+            - Path=/api/healthrecords/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: HEALTH-RECORDS-SERVICE
+                fallbackuri: forward:/healthRecordServiceFallback
+                
+        - id: GOAL-SERVICE
+          uri: lb://GOAL-SERVICE
+          predicates:
+            - Path=/api/goals/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: GOAL-SERVICE
+                fallbackuri: forward:/goalServiceFallback
+  zipkin:
+    base-url: http://127.0.0.1:9411/
+    
+
+    
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springcloudexternal
+    username: postgres
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  main:
+    web-application-type: reactive
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://172.20.20.208:8088/realms/springcloud-microservice
+          jwk-set-uri: http://172.20.20.208:8088/realms/springcloud-microservice/protocol/openid-connect/certs
+  security.oauth2.resourceserver.jwt:
+    client-id: KeycloakSpringClient
+    client-secret: KhBJrhQlAjGCnIyAdMbvii8Z7ZGhfZuT
+
+  jpa.properties.hibernate.id.new_generator_mappings: false
+
+keycloak:
+  cors-allowed-methods: POST, PUT, DELETE, GET
+realm: springcloud-microservice
+server-url: http://172.20.20.208:8088
+client-id: admin-cli
+grant-type: password
+name: adminuser
+password: password
+
+management:
+  tracing:
+    sampler:
+      probability: 1.0
+
+logging:
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+  file:
+    name:  .\logs\${spring.application.name}.log
+  file.max-size: 10MB
+  file.max-history: 5

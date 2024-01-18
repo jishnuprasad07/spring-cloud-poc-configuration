@@ -1,0 +1,40 @@
+server:
+  port: 8280
+  
+spring:
+  data:
+    mongodb:
+      uri: 'mongodb://localhost:27017/health-records'
+      
+  zipkin:
+    base-url: 'http://127.0.0.1:9411/'
+    
+management:
+  tracing:
+    sampler:
+      probability: 1
+      
+logging:
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+  file:
+    name:  .\logs\${spring.application.name}.log
+  file.max-size: 10MB
+  file.max-history: 5
+  
+bootstrap:
+  server:
+    port: 9092
+    
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: 'http://localhost:8761/eureka/'
+  instance:
+    hostname: localhost
